@@ -1,0 +1,36 @@
+"use client";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+type T = { slug: string; title: string; artist: string; size: number; plays: number; createdAt: string };
+
+export default function TrackRow({ track }: { track: T }) {
+  const router = useRouter();
+  const [copied, setCopied] = useState(false);
+  const share = () => {
+    navigator.clipboard.writeText(`${location.origin}/t/${track.slug}`);
+    setCopied(true); setTimeout(() => setCopied(false), 1500);
+  };
+  const del = async () => {
+    if (!confirm(`Delete "${track.title}"?`)) return;
+    await fetch(`/api/tracks/${track.slug}`, { method: "DELETE" });
+    router.refresh();
+  };
+  return (
+    <li className="rounded-xl border border-white/10 bg-white/5 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <a href={`/t/${track.slug}`} className="font-semibold hover:underline">{track.title}</a>
+          <p className="text-sm text-zinc-400">
+            {track.artist || "Unknown artist"} · {(track.size / 1048576).toFixed(1)} MB · {track.plays} plays
+          </p>
+        </div>
+        <div className="flex gap-2 text-sm">
+          <button onClick={share} className="rounded-md bg-indigo-500 px-3 py-1 hover:bg-indigo-400">{copied ? "Copied!" : "Copy link"}</button>
+          <button onClick={del} className="rounded-md bg-white/10 px-3 py-1 hover:bg-red-500">Delete</button>
+        </div>
+      </div>
+      <audio controls preload="none" src={`/api/tracks/${track.slug}`} className="mt-3 w-full" />
+    </li>
+  );
+}
