@@ -1,6 +1,7 @@
 import { db } from "@/db";
 import { tracks } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
+import { isAdmin } from "@/auth";
 
 export const runtime = "nodejs";
 
@@ -36,6 +37,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
 }
 
 export async function DELETE(_req: Request, ctx: { params: Promise<{ slug: string }> }) {
+  if (!(await isAdmin())) return Response.json({ error: "Owner login required" }, { status: 401 });
   const { slug } = await ctx.params;
   await db.delete(tracks).where(eq(tracks.slug, slug));
   return Response.json({ ok: true });

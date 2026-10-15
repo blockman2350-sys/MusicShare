@@ -4,7 +4,7 @@ import { useState } from "react";
 
 type T = { slug: string; title: string; artist: string; size: number; plays: number; createdAt: string; category: string; hasCover: boolean };
 
-export default function TrackRow({ track }: { track: T }) {
+export default function TrackRow({ track, canDelete = false }: { track: T; canDelete?: boolean }) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const share = () => {
@@ -36,7 +36,7 @@ export default function TrackRow({ track }: { track: T }) {
         </div>
         <div className="flex gap-2 text-sm">
           <button onClick={share} className="rounded-md bg-indigo-500 px-3 py-1 hover:bg-indigo-400">{copied ? "Copied!" : "Copy link"}</button>
-          <button onClick={del} className="rounded-md bg-white/10 px-3 py-1 hover:bg-red-500">Delete</button>
+          {canDelete && <button onClick={del} className="rounded-md bg-white/10 px-3 py-1 hover:bg-red-500">Delete</button>}
         </div>
       </div>
       <audio controls preload="none" src={`/api/tracks/${track.slug}`} className="mt-3 w-full" />

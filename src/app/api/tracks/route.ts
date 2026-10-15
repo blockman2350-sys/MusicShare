@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { tracks } from "@/db/schema";
 import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
+import { isAdmin } from "@/auth";
 import { DEFAULT_CATEGORY } from "../../categories";
 
 export const runtime = "nodejs";
@@ -9,6 +10,7 @@ export const runtime = "nodejs";
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 export async function POST(req: Request) {
+  if (!(await isAdmin())) return NextResponse.json({ error: "Owner login required" }, { status: 401 });
   const form = await req.formData();
   const file = form.get("file");
   if (!(file instanceof File) || !file.type.startsWith("audio/")) {
