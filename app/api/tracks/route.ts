@@ -3,6 +3,7 @@ import { tracks } from "@/db/schema";
 import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/auth";
+import { deleteObject, putObject, storageEnabled } from "@/storage";
 import { DEFAULT_ARTIST, DEFAULT_CATEGORY } from "../../categories";
 
 export const runtime = "nodejs";
@@ -37,9 +38,26 @@ export async function POST(req: Request) {
   const category = String(form.get("category") || "").trim().slice(0, 40) || DEFAULT_CATEGORY;
   const slug = randomBytes(6).toString("base64url");
   const buf = Buffer.from(await file.arrayBuffer());
-  await db.insert(tracks).values({
-    slug, title, artist, category, mimeType: file.type, size: file.size, data: buf,
-    cover: coverData, coverMime,
-  });
+  const values = { slug, title, artist, category, mimeType: file.type, size: file.size } as typeof tracks.$inferInsert;
+  if (storageEnabled()) {
+    // Files go to the bucket; Postgres keeps only metadata and the keys.
+    values.audioKey = `audio/${slug}`;
+    const keys = [values.audioKey];
+    try {
+      await putObject(values.audioKey, buf, file.type);
+      if (coverData && coverMime) {
+        values.coverKey = `covers/${slug}`;
+        keys.push(values.coverKey);
+        await putObject(values.coverKey, coverData, coverMime);
+        values.coverMime = coverMime;
+      }
+      await db.insert(tracks).values(values);
+    } catch (e) {
+      await Promise.allSettled(keys.map(deleteObject));
+      throw e;
+    }
+  } else {
+    await db.insert(tracks).values({ ...values, data: buf, cover: coverData, coverMime });
+  }
   return NextResponse.json({ slug });
 }

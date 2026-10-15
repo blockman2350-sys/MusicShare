@@ -10,10 +10,12 @@ export const tracks = pgTable("tracks", {
   mimeType: text("mime_type").notNull(),
   size: integer("size").notNull(),
   plays: integer("plays").notNull().default(0),
-  data: bytea("data").notNull(),
+  data: bytea("data"), // null once the file lives in the bucket (audioKey)
+  audioKey: text("audio_key"),
   category: text("category").notNull().default("Uncategorized"),
   coverMime: text("cover_mime"),
   cover: bytea("cover"),
+  coverKey: text("cover_key"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

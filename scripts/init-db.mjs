@@ -28,8 +28,12 @@ await client.query(`
   ALTER TABLE tracks
     ADD COLUMN IF NOT EXISTS category text NOT NULL DEFAULT 'Uncategorized',
     ADD COLUMN IF NOT EXISTS cover_mime text,
-    ADD COLUMN IF NOT EXISTS cover bytea
+    ADD COLUMN IF NOT EXISTS cover bytea,
+    ADD COLUMN IF NOT EXISTS audio_key text,
+    ADD COLUMN IF NOT EXISTS cover_key text
 `);
+// Files can live in the storage bucket instead of the database.
+await client.query("ALTER TABLE tracks ALTER COLUMN data DROP NOT NULL");
 await client.query(`
   CREATE TABLE IF NOT EXISTS settings (
     key text PRIMARY KEY,
@@ -45,6 +49,14 @@ const marker = await client.query(
 if (marker.rowCount) {
   const r = await client.query("UPDATE tracks SET category = 'Smooth Jazz' WHERE category = 'Jazz'");
   console.log(`renamed ${r.rowCount} track(s) from Jazz to Smooth Jazz`);
+}
+// Move any files still stored in Postgres into the bucket. A failure here must not
+// block startup: the app still reads whatever remains in the database.
+try {
+  const { migrateToBucket } = await import("./migrate-to-bucket.mjs");
+  await migrateToBucket(client);
+} catch (err) {
+  console.error("bucket migration error:", err.message);
 }
 await client.end();
 console.log("tracks table ready");

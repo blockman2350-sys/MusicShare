@@ -24,7 +24,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
     .select({
       slug: tracks.slug, title: tracks.title, artist: tracks.artist, size: tracks.size, plays: tracks.plays,
       createdAt: tracks.createdAt, category: tracks.category,
-      hasCover: sql<boolean>`${tracks.cover} is not null`,
+      hasCover: sql<boolean>`(${tracks.cover} is not null or ${tracks.coverKey} is not null)`,
     })
     .from(tracks)
     .where(category ? eq(tracks.category, category) : undefined)

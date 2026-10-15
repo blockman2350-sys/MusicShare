@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { tracks } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { isAdmin } from "@/auth";
+import { deleteObject, getObjectStream, storageEnabled } from "@/storage";
 
 export const runtime = "nodejs";
 
@@ -9,8 +10,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
   const { slug } = await ctx.params;
   const [t] = await db.select().from(tracks).where(eq(tracks.slug, slug));
   if (!t) return new Response("Not found", { status: 404 });
-  const data = Buffer.from(t.data);
-  const total = data.length;
+  const inBucket = Boolean(t.audioKey) && storageEnabled();
+  if (!inBucket && !t.data) return new Response("Not found", { status: 404 });
+  const data = inBucket ? null : Buffer.from(t.data!);
+  const total = data ? data.length : t.size;
   const range = req.headers.get("range");
   const download = new URL(req.url).searchParams.has("download");
   const headers: Record<string, string> = {
@@ -28,17 +31,27 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
     if (m && !m[1] && m[2]) { start = total - parseInt(m[2]); end = total - 1; }
     end = Math.min(end, total - 1);
     if (start === 0) await db.update(tracks).set({ plays: sql`${tracks.plays} + 1` }).where(eq(tracks.id, t.id));
-    return new Response(new Uint8Array(data.subarray(start, end + 1)), {
+    const body = data
+      ? new Uint8Array(data.subarray(start, end + 1))
+      : await getObjectStream(t.audioKey!, `bytes=${start}-${end}`);
+    if (!body) return new Response("Not found", { status: 404 });
+    return new Response(body, {
       status: 206,
       headers: { ...headers, "Content-Range": `bytes ${start}-${end}/${total}`, "Content-Length": String(end - start + 1) },
     });
   }
-  return new Response(new Uint8Array(data), { headers: { ...headers, "Content-Length": String(total) } });
+  const full = data ? new Uint8Array(data) : await getObjectStream(t.audioKey!);
+  if (!full) return new Response("Not found", { status: 404 });
+  return new Response(full, { headers: { ...headers, "Content-Length": String(total) } });
 }
 
 export async function DELETE(_req: Request, ctx: { params: Promise<{ slug: string }> }) {
   if (!(await isAdmin())) return Response.json({ error: "Owner login required" }, { status: 401 });
   const { slug } = await ctx.params;
+  const [t] = await db.select({ audioKey: tracks.audioKey, coverKey: tracks.coverKey }).from(tracks).where(eq(tracks.slug, slug));
   await db.delete(tracks).where(eq(tracks.slug, slug));
+  if (storageEnabled()) {
+    await Promise.allSettled([t?.audioKey, t?.coverKey].filter((k): k is string => !!k).map(deleteObject));
+  }
   return Response.json({ ok: true });
 }
