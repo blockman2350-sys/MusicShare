@@ -6,6 +6,6 @@
   },
   "deploy": {
     "startCommand": "npm start",
-    "preDeployCommand": ["npx drizzle-kit push --force"]
+    "preDeployCommand": ["node scripts/init-db.mjs"]
   }
 }
