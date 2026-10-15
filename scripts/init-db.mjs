@@ -38,5 +38,13 @@ await client.query(`
     updated_at timestamp NOT NULL DEFAULT now()
   )
 `);
+// One-time rename of the category "Jazz" to "Smooth Jazz"; the marker row keeps it from re-running.
+const marker = await client.query(
+  "INSERT INTO settings (key) VALUES ('migrated_smooth_jazz') ON CONFLICT (key) DO NOTHING RETURNING key",
+);
+if (marker.rowCount) {
+  const r = await client.query("UPDATE tracks SET category = 'Smooth Jazz' WHERE category = 'Jazz'");
+  console.log(`renamed ${r.rowCount} track(s) from Jazz to Smooth Jazz`);
+}
 await client.end();
 console.log("tracks table ready");
