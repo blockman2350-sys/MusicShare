@@ -11,5 +11,8 @@ export const tracks = pgTable("tracks", {
   size: integer("size").notNull(),
   plays: integer("plays").notNull().default(0),
   data: bytea("data").notNull(),
+  category: text("category").notNull().default("Uncategorized"),
+  coverMime: text("cover_mime"),
+  cover: bytea("cover"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

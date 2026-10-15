@@ -1,15 +1,27 @@
 import { db } from "@/db";
 import { tracks } from "@/db/schema";
-import { desc } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
+import Link from "next/link";
 import Uploader from "./Uploader";
 import TrackRow from "./TrackRow";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
-  const list = await db
-    .select({ slug: tracks.slug, title: tracks.title, artist: tracks.artist, size: tracks.size, plays: tracks.plays, createdAt: tracks.createdAt })
+export default async function Home({ searchParams }: { searchParams: Promise<{ category?: string }> }) {
+  const { category } = await searchParams;
+  const categoryRows = await db
+    .select({ category: tracks.category, n: sql<number>`count(*)::int` })
     .from(tracks)
+    .groupBy(tracks.category)
+    .orderBy(tracks.category);
+  const list = await db
+    .select({
+      slug: tracks.slug, title: tracks.title, artist: tracks.artist, size: tracks.size, plays: tracks.plays,
+      createdAt: tracks.createdAt, category: tracks.category,
+      hasCover: sql<boolean>`${tracks.cover} is not null`,
+    })
+    .from(tracks)
+    .where(category ? eq(tracks.category, category) : undefined)
     .orderBy(desc(tracks.createdAt));
   return (
     <main className="min-h-screen bg-gradient-to-b from-zinc-950 to-indigo-950 text-zinc-100">
@@ -17,7 +29,18 @@ export default async function Home() {
         <h1 className="text-4xl font-bold tracking-tight">🎵 SoundShelf</h1>
         <p className="mt-2 text-zinc-400">Store your music and share it with a link.</p>
         <Uploader />
-        <h2 className="mt-12 mb-4 text-xl font-semibold">Your library ({list.length})</h2>
+        <h2 className="mt-12 mb-4 text-xl font-semibold">{category ? `${category} (${list.length})` : `Your library (${list.length})`}</h2>
+        {categoryRows.length > 0 && (
+          <div className="mb-4 flex flex-wrap gap-2 text-sm">
+            <Link href="/" className={`rounded-full px-3 py-1 ${!category ? "bg-indigo-500" : "bg-white/10 hover:bg-white/20"}`}>All</Link>
+            {categoryRows.map((c) => (
+              <a key={c.category} href={`/?category=${encodeURIComponent(c.category)}`}
+                className={`rounded-full px-3 py-1 ${category === c.category ? "bg-indigo-500" : "bg-white/10 hover:bg-white/20"}`}>
+                {c.category} ({c.n})
+              </a>
+            ))}
+          </div>
+        )}
         {list.length === 0 ? (
           <p className="text-zinc-500">No tracks yet — upload your first song above.</p>
         ) : (
