@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { DEFAULT_ARTIST } from "./categories";
 
 type T = { slug: string; title: string; artist: string; size: number; plays: number; createdAt: string; category: string; coverUrl: string | null };
 
@@ -29,7 +30,7 @@ export default function TrackRow({ track, canDelete = false }: { track: T; canDe
           <div>
           <a href={`/t/${track.slug}`} className="font-semibold hover:underline">{track.title}</a>
           <p className="text-sm text-zinc-400">
-            {track.artist || "Unknown artist"} · {(track.size / 1048576).toFixed(1)} MB · {track.plays} plays
+            {track.artist || DEFAULT_ARTIST} · {(track.size / 1048576).toFixed(1)} MB · {track.plays} plays
           </p>
           <a href={`/?category=${encodeURIComponent(track.category)}`} className="mt-1 inline-block rounded-full bg-white/10 px-2 py-0.5 text-xs text-zinc-300 hover:bg-white/20">{track.category}</a>
           </div>

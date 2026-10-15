@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { CATEGORIES } from "./categories";
+import { CATEGORIES, DEFAULT_ARTIST } from "./categories";
 
 type Item = { file: File; title: string; artist: string; cover: File | null; status: "pending" | "uploading" | "done" | "error"; error?: string };
 
@@ -19,7 +19,7 @@ export default function Uploader() {
   function pick(files: FileList | null) {
     if (!files) return;
     const added: Item[] = Array.from(files).map((file) => ({
-      file, title: file.name.replace(/\.[^.]+$/, ""), artist: "", cover: null, status: "pending",
+      file, title: file.name.replace(/\.[^.]+$/, ""), artist: DEFAULT_ARTIST, cover: null, status: "pending",
     }));
     setItems((prev) => [...prev, ...added]);
   }
