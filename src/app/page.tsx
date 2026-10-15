@@ -6,12 +6,15 @@ import { isAdmin } from "@/auth";
 import Uploader from "./Uploader";
 import LogoutButton from "./LogoutButton";
 import TrackRow from "./TrackRow";
+import DefaultCoverEditor from "./DefaultCoverEditor";
+import { defaultCoverUrl } from "@/defaultCover";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ category?: string }> }) {
   const { category } = await searchParams;
   const admin = await isAdmin();
+  const fallbackCover = await defaultCoverUrl();
   const categoryRows = await db
     .select({ category: tracks.category, n: sql<number>`count(*)::int` })
     .from(tracks)
@@ -32,6 +35,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
         <h1 className="text-4xl font-bold tracking-tight">🎵 SoundShelf</h1>
         <p className="mt-2 text-zinc-400">Store your music and share it with a link.</p>
         {admin ? <Uploader /> : null}
+        {admin ? <DefaultCoverEditor coverUrl={fallbackCover} /> : null}
         <h2 className="mt-12 mb-4 text-xl font-semibold">{category ? `${category} (${list.length})` : `Your library (${list.length})`}</h2>
         {categoryRows.length > 0 && (
           <div className="mb-4 flex flex-wrap gap-2 text-sm">
@@ -49,7 +53,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
         ) : (
           <ul className="space-y-3">
             {list.map((t) => (
-              <TrackRow key={t.slug} canDelete={admin} track={{ ...t, createdAt: t.createdAt.toISOString() }} />
+              <TrackRow key={t.slug} canDelete={admin} track={{ ...t, createdAt: t.createdAt.toISOString(), coverUrl: t.hasCover ? `/api/tracks/${t.slug}/cover` : fallbackCover }} />
             ))}
           </ul>
         )}
