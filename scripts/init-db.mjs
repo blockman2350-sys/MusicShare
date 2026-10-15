@@ -30,5 +30,13 @@ await client.query(`
     ADD COLUMN IF NOT EXISTS cover_mime text,
     ADD COLUMN IF NOT EXISTS cover bytea
 `);
+await client.query(`
+  CREATE TABLE IF NOT EXISTS settings (
+    key text PRIMARY KEY,
+    mime text,
+    data bytea,
+    updated_at timestamp NOT NULL DEFAULT now()
+  )
+`);
 await client.end();
 console.log("tracks table ready");

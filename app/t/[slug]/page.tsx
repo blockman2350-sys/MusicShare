@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { tracks } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { notFound } from "next/navigation";
+import { defaultCoverUrl } from "@/defaultCover";
 
 export const dynamic = "force-dynamic";
 
@@ -9,12 +10,13 @@ export default async function SharePage({ params }: { params: Promise<{ slug: st
   const { slug } = await params;
   const [t] = await db.select({ title: tracks.title, artist: tracks.artist, plays: tracks.plays, category: tracks.category, hasCover: sql<boolean>`${tracks.cover} is not null` }).from(tracks).where(eq(tracks.slug, slug));
   if (!t) notFound();
+  const coverUrl = t.hasCover ? `/api/tracks/${slug}/cover` : await defaultCoverUrl();
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-zinc-950 via-indigo-950 to-fuchsia-950 p-4 text-zinc-100">
       <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-8 text-center shadow-2xl">
-        {t.hasCover ? (
+        {coverUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={`/api/tracks/${slug}/cover`} alt="" className="mx-auto h-40 w-40 rounded-2xl object-cover" />
+          <img src={coverUrl} alt="" className="mx-auto h-40 w-40 rounded-2xl object-cover" />
         ) : (
           <div className="mx-auto flex h-40 w-40 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-6xl">🎵</div>
         )}

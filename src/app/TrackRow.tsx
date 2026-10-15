@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-type T = { slug: string; title: string; artist: string; size: number; plays: number; createdAt: string; category: string; hasCover: boolean };
+type T = { slug: string; title: string; artist: string; size: number; plays: number; createdAt: string; category: string; coverUrl: string | null };
 
 export default function TrackRow({ track, canDelete = false }: { track: T; canDelete?: boolean }) {
   const router = useRouter();
@@ -20,9 +20,9 @@ export default function TrackRow({ track, canDelete = false }: { track: T; canDe
     <li className="rounded-xl border border-white/10 bg-white/5 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
-          {track.hasCover ? (
+          {track.coverUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={`/api/tracks/${track.slug}/cover`} alt="" className="h-14 w-14 rounded-lg object-cover" />
+            <img src={track.coverUrl} alt="" className="h-14 w-14 rounded-lg object-cover" />
           ) : (
             <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-2xl">🎵</div>
           )}

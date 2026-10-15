@@ -16,3 +16,12 @@ export const tracks = pgTable("tracks", {
   cover: bytea("cover"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+// Site-wide settings. The row with key "default_cover" holds the cover picture
+// shown for tracks that have no cover of their own.
+export const settings = pgTable("settings", {
+  key: text("key").primaryKey(),
+  mime: text("mime"),
+  data: bytea("data"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
