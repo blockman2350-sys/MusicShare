@@ -1,20 +1,26 @@
 import { db } from "@/db";
 import { tracks } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function SharePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [t] = await db.select({ title: tracks.title, artist: tracks.artist, plays: tracks.plays }).from(tracks).where(eq(tracks.slug, slug));
+  const [t] = await db.select({ title: tracks.title, artist: tracks.artist, plays: tracks.plays, category: tracks.category, hasCover: sql<boolean>`${tracks.cover} is not null` }).from(tracks).where(eq(tracks.slug, slug));
   if (!t) notFound();
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-zinc-950 via-indigo-950 to-fuchsia-950 p-4 text-zinc-100">
       <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-8 text-center shadow-2xl">
-        <div className="mx-auto flex h-40 w-40 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-6xl">🎵</div>
+        {t.hasCover ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={`/api/tracks/${slug}/cover`} alt="" className="mx-auto h-40 w-40 rounded-2xl object-cover" />
+        ) : (
+          <div className="mx-auto flex h-40 w-40 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-6xl">🎵</div>
+        )}
         <h1 className="mt-6 text-2xl font-bold">{t.title}</h1>
         <p className="text-zinc-400">{t.artist || "Unknown artist"}</p>
+        <p className="mt-2"><span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-zinc-300">{t.category}</span></p>
         <audio controls autoPlay={false} src={`/api/tracks/${slug}`} className="mt-6 w-full" />
         <div className="mt-4 flex justify-center gap-4 text-sm">
           <a href={`/api/tracks/${slug}?download`} className="rounded-md bg-indigo-500 px-4 py-2 hover:bg-indigo-400">Download</a>

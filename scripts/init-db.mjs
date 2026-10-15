@@ -23,5 +23,12 @@ await client.query(`
     created_at timestamp NOT NULL DEFAULT now()
   )
 `);
+// Columns added after the first release; safe to repeat.
+await client.query(`
+  ALTER TABLE tracks
+    ADD COLUMN IF NOT EXISTS category text NOT NULL DEFAULT 'Uncategorized',
+    ADD COLUMN IF NOT EXISTS cover_mime text,
+    ADD COLUMN IF NOT EXISTS cover bytea
+`);
 await client.end();
 console.log("tracks table ready");
