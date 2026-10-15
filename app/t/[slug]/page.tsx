@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function SharePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [t] = await db.select({ title: tracks.title, artist: tracks.artist, plays: tracks.plays, category: tracks.category, hasCover: sql<boolean>`${tracks.cover} is not null` }).from(tracks).where(eq(tracks.slug, slug));
+  const [t] = await db.select({ title: tracks.title, artist: tracks.artist, plays: tracks.plays, category: tracks.category, hasCover: sql<boolean>`(${tracks.cover} is not null or ${tracks.coverKey} is not null)` }).from(tracks).where(eq(tracks.slug, slug));
   if (!t) notFound();
   const coverUrl = t.hasCover ? `/api/tracks/${slug}/cover` : await defaultCoverUrl();
   return (
