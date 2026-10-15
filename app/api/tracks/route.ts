@@ -3,7 +3,7 @@ import { tracks } from "@/db/schema";
 import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/auth";
-import { DEFAULT_CATEGORY } from "../../categories";
+import { DEFAULT_ARTIST, DEFAULT_CATEGORY } from "../../categories";
 
 export const runtime = "nodejs";
 
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     coverMime = cover.type;
   }
   const title = String(form.get("title") || "").trim() || file.name.replace(/\.[^.]+$/, "");
-  const artist = String(form.get("artist") || "").trim();
+  const artist = String(form.get("artist") || "").trim() || DEFAULT_ARTIST;
   const category = String(form.get("category") || "").trim().slice(0, 40) || DEFAULT_CATEGORY;
   const slug = randomBytes(6).toString("base64url");
   const buf = Buffer.from(await file.arrayBuffer());

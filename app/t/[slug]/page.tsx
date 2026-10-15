@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { tracks } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { notFound } from "next/navigation";
+import { DEFAULT_ARTIST } from "../../categories";
 import { defaultCoverUrl } from "@/defaultCover";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +22,7 @@ export default async function SharePage({ params }: { params: Promise<{ slug: st
           <div className="mx-auto flex h-40 w-40 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-6xl">🎵</div>
         )}
         <h1 className="mt-6 text-2xl font-bold">{t.title}</h1>
-        <p className="text-zinc-400">{t.artist || "Unknown artist"}</p>
+        <p className="text-zinc-400">{t.artist || DEFAULT_ARTIST}</p>
         <p className="mt-2"><span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-zinc-300">{t.category}</span></p>
         <audio controls autoPlay={false} src={`/api/tracks/${slug}`} className="mt-6 w-full" />
         <div className="mt-4 flex justify-center gap-4 text-sm">
