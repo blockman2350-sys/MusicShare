@@ -6,6 +6,7 @@ import { isAdmin } from "@/auth";
 import Uploader from "./Uploader";
 import LogoutButton from "./LogoutButton";
 import TrackRow from "./TrackRow";
+import PlayAll from "./PlayAll";
 import DefaultCoverEditor from "./DefaultCoverEditor";
 import { defaultCoverUrl } from "@/defaultCover";
 
@@ -36,7 +37,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
         <p className="mt-2 text-zinc-400">Store your music and share it with a link.</p>
         {admin ? <Uploader /> : null}
         {admin ? <DefaultCoverEditor coverUrl={fallbackCover} /> : null}
-        <h2 className="mt-12 mb-4 text-xl font-semibold">{category ? `${category} (${list.length})` : `Your library (${list.length})`}</h2>
+        <div className="mt-12 mb-4 flex items-center justify-between gap-3">
+          <h2 className="text-xl font-semibold">{category ? `${category} (${list.length})` : `Your library (${list.length})`}</h2>
+          {list.length > 0 && <PlayAll />}
+        </div>
         {categoryRows.length > 0 && (
           <div className="mb-4 flex flex-wrap gap-2 text-sm">
             <Link href="/" className={`rounded-full px-3 py-1 ${!category ? "bg-indigo-500" : "bg-white/10 hover:bg-white/20"}`}>All</Link>
@@ -51,7 +55,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
         {list.length === 0 ? (
           <p className="text-zinc-500">No tracks yet — upload your first song above.</p>
         ) : (
-          <ul className="space-y-3">
+          <ul id="tracklist" className="space-y-3">
             {list.map((t) => (
               <TrackRow key={t.slug} canDelete={admin} track={{ ...t, createdAt: t.createdAt.toISOString(), coverUrl: t.hasCover ? `/api/tracks/${t.slug}/cover` : fallbackCover }} />
             ))}
