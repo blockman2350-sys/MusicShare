@@ -2,13 +2,16 @@ import { db } from "@/db";
 import { tracks } from "@/db/schema";
 import { desc, eq, sql } from "drizzle-orm";
 import Link from "next/link";
+import { isAdmin } from "@/auth";
 import Uploader from "./Uploader";
+import LogoutButton from "./LogoutButton";
 import TrackRow from "./TrackRow";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ category?: string }> }) {
   const { category } = await searchParams;
+  const admin = await isAdmin();
   const categoryRows = await db
     .select({ category: tracks.category, n: sql<number>`count(*)::int` })
     .from(tracks)
@@ -28,7 +31,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
       <div className="mx-auto max-w-3xl px-4 py-12">
         <h1 className="text-4xl font-bold tracking-tight">🎵 SoundShelf</h1>
         <p className="mt-2 text-zinc-400">Store your music and share it with a link.</p>
-        <Uploader />
+        {admin ? <Uploader /> : null}
         <h2 className="mt-12 mb-4 text-xl font-semibold">{category ? `${category} (${list.length})` : `Your library (${list.length})`}</h2>
         {categoryRows.length > 0 && (
           <div className="mb-4 flex flex-wrap gap-2 text-sm">
@@ -46,10 +49,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
         ) : (
           <ul className="space-y-3">
             {list.map((t) => (
-              <TrackRow key={t.slug} track={{ ...t, createdAt: t.createdAt.toISOString() }} />
+              <TrackRow key={t.slug} canDelete={admin} track={{ ...t, createdAt: t.createdAt.toISOString() }} />
             ))}
           </ul>
         )}
+        <footer className="mt-12 text-center">
+          {admin ? <LogoutButton /> : <Link href="/login" className="text-xs text-zinc-600 hover:text-zinc-400">Owner login</Link>}
+        </footer>
       </div>
     </main>
   );
