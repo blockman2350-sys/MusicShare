@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DEFAULT_ARTIST } from "./categories";
 
-type T = { slug: string; title: string; artist: string; size: number; plays: number; createdAt: string; category: string; coverUrl: string | null };
+type T = { slug: string; mimeType: string; title: string; artist: string; size: number; plays: number; createdAt: string; category: string; coverUrl: string | null };
 
 export default function TrackRow({ track, canDelete = false }: { track: T; canDelete?: boolean }) {
   const router = useRouter();
@@ -40,7 +40,11 @@ export default function TrackRow({ track, canDelete = false }: { track: T; canDe
           {canDelete && <button onClick={del} className="rounded-md bg-white/10 px-3 py-1 hover:bg-red-500">Delete</button>}
         </div>
       </div>
-      <audio controls preload="none" src={`/api/tracks/${track.slug}`} className="mt-3 w-full" />
+      {track.mimeType.startsWith("video/") ? (
+        <video controls playsInline preload="metadata" src={`/api/tracks/${track.slug}`} className="mt-3 w-full rounded-lg bg-black" />
+      ) : (
+        <audio controls preload="none" src={`/api/tracks/${track.slug}`} className="mt-3 w-full" />
+      )}
     </li>
   );
 }

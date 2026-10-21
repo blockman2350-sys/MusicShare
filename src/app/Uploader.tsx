@@ -56,8 +56,8 @@ export default function Uploader() {
     <form onSubmit={submit} className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
       <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-indigo-400/40 p-6 text-center hover:bg-white/5">
         <span className="text-3xl">⬆️</span>
-        <span className="mt-2 text-sm text-zinc-300">Choose one or more audio files (MP3, WAV, OGG, M4A… up to 50MB each)</span>
-        <input type="file" accept="audio/*" multiple className="hidden" disabled={busy}
+        <span className="mt-2 text-sm text-zinc-300">Choose audio files (MP3, WAV, OGG, M4A… up to 50MB each) or MP4 videos (up to 100MB each)</span>
+        <input type="file" accept="audio/*,video/mp4,.mp4" multiple className="hidden" disabled={busy}
           onChange={(e) => { pick(e.target.files); e.target.value = ""; }} />
       </label>
 

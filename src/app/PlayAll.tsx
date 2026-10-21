@@ -1,19 +1,19 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 
-// Plays every track in the list below (#tracklist) one after another, so each
+// Plays every track or video in the list below (#tracklist) one after another, so each
 // track doesn't have to be started by hand. Only one track plays at a time.
 export default function PlayAll() {
   const [on, setOn] = useState(false);
   const onRef = useRef(false);
   const set = (v: boolean) => { onRef.current = v; setOn(v); };
-  const audios = () => Array.from(document.querySelectorAll<HTMLAudioElement>("#tracklist audio"));
+  const audios = () => Array.from(document.querySelectorAll<HTMLMediaElement>("#tracklist audio, #tracklist video"));
 
   useEffect(() => {
     const ended = (e: Event) => {
       if (!onRef.current) return;
       const list = audios();
-      const next = list[list.indexOf(e.target as HTMLAudioElement) + 1];
+      const next = list[list.indexOf(e.target as HTMLMediaElement) + 1];
       if (!next) return set(false);
       next.play().catch(() => set(false));
       next.scrollIntoView({ block: "center", behavior: "smooth" });
