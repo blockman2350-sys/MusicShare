@@ -23,7 +23,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
     .orderBy(tracks.category);
   const list = await db
     .select({
-      slug: tracks.slug, title: tracks.title, artist: tracks.artist, size: tracks.size, plays: tracks.plays,
+      slug: tracks.slug, mimeType: tracks.mimeType, title: tracks.title, artist: tracks.artist, size: tracks.size, plays: tracks.plays,
       createdAt: tracks.createdAt, category: tracks.category,
       hasCover: sql<boolean>`(${tracks.cover} is not null or ${tracks.coverKey} is not null)`,
     })

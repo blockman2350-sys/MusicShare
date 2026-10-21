@@ -14,11 +14,15 @@ export async function POST(req: Request) {
   if (!(await isAdmin())) return NextResponse.json({ error: "Owner login required" }, { status: 401 });
   const form = await req.formData();
   const file = form.get("file");
-  if (!(file instanceof File) || !file.type.startsWith("audio/")) {
-    return NextResponse.json({ error: "Please upload an audio file" }, { status: 400 });
+  // Some browsers send an empty or generic type for .mp4 files.
+  const mimeType = file instanceof File ? (/\.mp4$/i.test(file.name) && (!file.type || file.type === "application/octet-stream") ? "video/mp4" : file.type) : "";
+  const isVideo = mimeType === "video/mp4";
+  if (!(file instanceof File) || !(isVideo || mimeType.startsWith("audio/"))) {
+    return NextResponse.json({ error: "Please upload an audio file or an MP4 video" }, { status: 400 });
   }
-  if (file.size > 50 * 1024 * 1024) {
-    return NextResponse.json({ error: "Max 50MB" }, { status: 400 });
+  const maxMb = isVideo ? 100 : 50;
+  if (file.size > maxMb * 1024 * 1024) {
+    return NextResponse.json({ error: `Max ${maxMb}MB` }, { status: 400 });
   }
   const cover = form.get("cover");
   let coverData: Buffer | null = null;
@@ -38,13 +42,13 @@ export async function POST(req: Request) {
   const category = String(form.get("category") || "").trim().slice(0, 40) || DEFAULT_CATEGORY;
   const slug = randomBytes(6).toString("base64url");
   const buf = Buffer.from(await file.arrayBuffer());
-  const values = { slug, title, artist, category, mimeType: file.type, size: file.size } as typeof tracks.$inferInsert;
+  const values = { slug, title, artist, category, mimeType, size: file.size } as typeof tracks.$inferInsert;
   if (storageEnabled()) {
     // Files go to the bucket; Postgres keeps only metadata and the keys.
     values.audioKey = `audio/${slug}`;
     const keys = [values.audioKey];
     try {
-      await putObject(values.audioKey, buf, file.type);
+      await putObject(values.audioKey, buf, mimeType);
       if (coverData && coverMime) {
         values.coverKey = `covers/${slug}`;
         keys.push(values.coverKey);
