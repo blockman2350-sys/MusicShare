@@ -41,7 +41,7 @@ export default function TrackRow({ track, canDelete = false }: { track: T; canDe
         </div>
       </div>
       {track.mimeType.startsWith("video/") ? (
-        <video controls playsInline preload="metadata" src={`/api/tracks/${track.slug}`} className="mt-3 w-full rounded-lg bg-black" />
+        <video controls playsInline preload="none" src={`/api/tracks/${track.slug}`} className="mt-3 w-full rounded-lg bg-black" />
       ) : (
         <audio controls preload="none" src={`/api/tracks/${track.slug}`} className="mt-3 w-full" />
       )}

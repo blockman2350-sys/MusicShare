@@ -29,6 +29,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
     let start = m && m[1] ? parseInt(m[1]) : 0;
     let end = m && m[2] ? parseInt(m[2]) : total - 1;
     if (m && !m[1] && m[2]) { start = total - parseInt(m[2]); end = total - 1; }
+    // Browsers ask for "bytes=0-" (the whole file) just to read a video's
+    // header. Serve at most 4MB per response so an abandoned request cannot
+    // hold a bucket connection streaming up to 100MB; the player asks again.
+    if (m && !m[2]) end = Math.min(end, start + 4 * 1024 * 1024 - 1);
     end = Math.min(end, total - 1);
     if (start === 0) await db.update(tracks).set({ plays: sql`${tracks.plays} + 1` }).where(eq(tracks.id, t.id));
     const body = data
