@@ -29,18 +29,22 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
     let start = m && m[1] ? parseInt(m[1]) : 0;
     let end = m && m[2] ? parseInt(m[2]) : total - 1;
     if (m && !m[1] && m[2]) { start = total - parseInt(m[2]); end = total - 1; }
+    // Browsers ask for "bytes=0-" (the whole file) just to read a video's
+    // header. Serve at most 4MB per response so an abandoned request cannot
+    // hold a bucket connection streaming up to 100MB; the player asks again.
+    if (m && !m[2]) end = Math.min(end, start + 4 * 1024 * 1024 - 1);
     end = Math.min(end, total - 1);
     if (start === 0) await db.update(tracks).set({ plays: sql`${tracks.plays} + 1` }).where(eq(tracks.id, t.id));
     const body = data
       ? new Uint8Array(data.subarray(start, end + 1))
-      : await getObjectStream(t.audioKey!, `bytes=${start}-${end}`);
+      : await getObjectStream(t.audioKey!, `bytes=${start}-${end}`, req.signal);
     if (!body) return new Response("Not found", { status: 404 });
     return new Response(body, {
       status: 206,
       headers: { ...headers, "Content-Range": `bytes ${start}-${end}/${total}`, "Content-Length": String(end - start + 1) },
     });
   }
-  const full = data ? new Uint8Array(data) : await getObjectStream(t.audioKey!);
+  const full = data ? new Uint8Array(data) : await getObjectStream(t.audioKey!, undefined, req.signal);
   if (!full) return new Response("Not found", { status: 404 });
   return new Response(full, { headers: { ...headers, "Content-Length": String(total) } });
 }
