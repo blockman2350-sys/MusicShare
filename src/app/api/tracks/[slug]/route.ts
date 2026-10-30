@@ -33,14 +33,14 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
     if (start === 0) await db.update(tracks).set({ plays: sql`${tracks.plays} + 1` }).where(eq(tracks.id, t.id));
     const body = data
       ? new Uint8Array(data.subarray(start, end + 1))
-      : await getObjectStream(t.audioKey!, `bytes=${start}-${end}`);
+      : await getObjectStream(t.audioKey!, `bytes=${start}-${end}`, req.signal);
     if (!body) return new Response("Not found", { status: 404 });
     return new Response(body, {
       status: 206,
       headers: { ...headers, "Content-Range": `bytes ${start}-${end}/${total}`, "Content-Length": String(end - start + 1) },
     });
   }
-  const full = data ? new Uint8Array(data) : await getObjectStream(t.audioKey!);
+  const full = data ? new Uint8Array(data) : await getObjectStream(t.audioKey!, undefined, req.signal);
   if (!full) return new Response("Not found", { status: 404 });
   return new Response(full, { headers: { ...headers, "Content-Length": String(total) } });
 }

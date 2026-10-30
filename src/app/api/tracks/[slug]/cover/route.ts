@@ -5,7 +5,7 @@ import { getObjectStream, storageEnabled } from "@/storage";
 
 export const runtime = "nodejs";
 
-export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }> }) {
+export async function GET(req: Request, ctx: { params: Promise<{ slug: string }> }) {
   const { slug } = await ctx.params;
   const [t] = await db
     .select({ cover: tracks.cover, coverMime: tracks.coverMime, coverKey: tracks.coverKey })
@@ -14,7 +14,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }
   if (!t?.coverMime) return new Response("Not found", { status: 404 });
   const headers = { "Content-Type": t.coverMime, "Cache-Control": "public, max-age=3600" };
   if (t.coverKey && storageEnabled()) {
-    const body = await getObjectStream(t.coverKey);
+    const body = await getObjectStream(t.coverKey, undefined, req.signal);
     if (!body) return new Response("Not found", { status: 404 });
     return new Response(body, { headers });
   }
