@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   if (!(file instanceof File) || !(isVideo || mimeType.startsWith("audio/"))) {
     return NextResponse.json({ error: "Please upload an audio file or an MP4 video" }, { status: 400 });
   }
-  const maxMb = isVideo ? 100 : 50;
+  const maxMb = isVideo ? 150 : 50;
   if (file.size > maxMb * 1024 * 1024) {
     return NextResponse.json({ error: `Max ${maxMb}MB` }, { status: 400 });
   }
